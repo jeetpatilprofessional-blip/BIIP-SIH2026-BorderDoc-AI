@@ -1,0 +1,228 @@
+# BIIP-SIH2026 Document Templates
+# Visa PDF417 Barcode Template Configuration
+
+document_type: "VISA"
+format: "PDF417"
+standard: "ICAO 9303 Part 3 / National Specification"
+version: "1.0"
+
+# Barcode Data Structure (Indian Visa Format)
+barcode_structure:
+  delimiter: "|"
+  fields:
+    - name: "document_type"
+      value: "VISA"
+      description: "Document type identifier"
+
+    - name: "issuing_state"
+      description: "ISO 3166-1 alpha-3 country code"
+      example: "IND"
+
+    - name: "scenario_id"
+      description: "Demo scenario identifier"
+      example: "SCENARIO_1"
+
+    - name: "visa_type"
+      values: ["TOURIST", "BUSINESS", "TRANSIT", "STUDENT", "WORK", "MEDICAL"]
+      description: "Visa category"
+      example: "TOURIST"
+
+    - name: "entry_type"
+      values: ["SINGLE", "MULTIPLE"]
+      description: "Number of entries permitted"
+      example: "SINGLE"
+
+    - name: "visa_number"
+      description: "Unique visa identifier"
+      example: "VISA_IND_2024_ABC"
+
+    - name: "passport_number"
+      description: "Linked passport number"
+      example: "P<IND12345678"
+
+    - name: "surname"
+      description: "Visa holder surname"
+      example: "DEMO"
+
+    - name: "given_names"
+      description: "Visa holder given names"
+      example: "TRAVELER"
+
+    - name: "birth_date"
+      format: "YYYY-MM-DD"
+      description: "Date of birth"
+      example: "1990-01-15"
+
+    - name: "nationality"
+      description: "ISO 3166-1 alpha-3 nationality code"
+      example: "IND"
+
+    - name: "issue_date"
+      format: "YYYY-MM-DD"
+      description: "Visa issue date"
+      example: "2024-01-10"
+
+    - name: "expiry_date"
+      format: "YYYY-MM-DD"
+      description: "Visa expiry date"
+      example: "2025-01-10"
+
+    - name: "entry_date"
+      format: "YYYY-MM-DD"
+      description: "Permitted entry date"
+      example: "2024-01-15"
+
+    - name: "exit_date"
+      format: "YYYY-MM-DD"
+      description: "Required exit date"
+      example: "2024-02-15"
+
+    - name: "max_stay_days"
+      description: "Maximum permitted stay in days"
+      example: "30"
+
+    - name: "places_of_visit"
+      description: "Authorized ports/locations"
+      example: "DEL,BOM,MAA"
+
+    - name: "purpose_of_visit"
+      description: "Declared purpose"
+      example: "TOURISM"
+
+    - name: "reference_number"
+      description: "Application reference"
+      example: "REF2024001"
+
+# Field Extraction Mapping
+field_mapping:
+  barcode:
+    visa_number: "visa_number"
+    passport_number: "passport_number"
+    surname: "surname"
+    given_names: "given_names"
+    birth_date: "birth_date"
+    nationality: "nationality"
+    visa_type: "visa_type"
+    entry_type: "entry_type"
+    issue_date: "issue_date"
+    expiry_date: "expiry_date"
+    entry_date: "entry_date"
+    exit_date: "exit_date"
+    max_stay_days: "max_stay_days"
+    places_of_visit: "places_of_visit"
+    purpose_of_visit: "purpose_of_visit"
+    reference_number: "reference_number"
+
+  ocr_zones:
+    - name: "visa_number"
+      zone: [0.1, 0.1, 0.5, 0.2]
+      languages: ["eng"]
+    - name: "surname"
+      zone: [0.1, 0.2, 0.5, 0.3]
+      languages: ["eng"]
+    - name: "given_names"
+      zone: [0.1, 0.3, 0.5, 0.4]
+      languages: ["eng"]
+    - name: "passport_number"
+      zone: [0.1, 0.4, 0.5, 0.5]
+      languages: ["eng"]
+    - name: "birth_date"
+      zone: [0.1, 0.5, 0.3, 0.6]
+      languages: ["eng"]
+    - name: "expiry_date"
+      zone: [0.1, 0.6, 0.3, 0.7]
+      languages: ["eng"]
+
+# Validation Rules
+validation:
+  required_fields:
+    - "visa_number"
+    - "passport_number"
+    - "surname"
+    - "given_names"
+    - "birth_date"
+    - "nationality"
+    - "visa_type"
+    - "entry_type"
+    - "issue_date"
+    - "expiry_date"
+
+  field_formats:
+    visa_number: "^VISA_[A-Z]{3}_\\d{4}_[A-Z0-9]{3,10}$"
+    passport_number: "^[A-Z0-9<]{6,12}$"
+    birth_date: "^\\d{4}-\\d{2}-\\d{2}$"
+    expiry_date: "^\\d{4}-\\d{2}-\\d{2}$"
+    issue_date: "^\\d{4}-\\d{2}-\\d{2}$"
+    entry_date: "^\\d{4}-\\d{2}-\\d{2}$"
+    exit_date: "^\\d{4}-\\d{2}-\\d{2}$"
+    visa_type: "^(TOURIST|BUSINESS|TRANSIT|STUDENT|WORK|MEDICAL)$"
+    entry_type: "^(SINGLE|MULTIPLE)$"
+    nationality: "^[A-Z]{3}$"
+
+  cross_validation:
+    - "issue_date_before_expiry"
+    - "entry_date_on_or_after_issue"
+    - "exit_date_on_or_before_expiry"
+    - "max_stay_consistent_with_dates"
+    - "passport_number_format_valid"
+    - "birth_date_reasonable"
+
+# Visual Features for Tamper Detection
+visual_features:
+  barcode_zone: [0.05, 0.75, 0.95, 0.95]  # Bottom area
+  photo_zone: [0.65, 0.1, 0.95, 0.5]  # Right side
+  security_features:
+    - "hologram"
+    - "uv_ink"
+    - "microprint"
+    - "guilloche_pattern"
+    - "color_shifting_ink"
+
+# Demo Data Generation
+demo_generation:
+  scenario_1:
+    visa_number: "VISA_IND_2024_ABC"
+    passport_number: "P<IND12345678"
+    surname: "DEMO"
+    given_names: "TRAVELER"
+    birth_date: "1990-01-15"
+    nationality: "IND"
+    visa_type: "TOURIST"
+    entry_type: "SINGLE"
+    issue_date: "2024-01-10"
+    expiry_date: "2025-01-10"
+    entry_date: "2024-01-15"
+    exit_date: "2024-02-15"
+    max_stay_days: 30
+    places_of_visit: "DEL"
+    purpose_of_visit: "TOURISM"
+    reference_number: "REF2024001"
+
+  scenario_2:  # Same as scenario 1 (valid visa, expired passport)
+    visa_number: "VISA_IND_2024_DEF"
+    passport_number: "P<IND11111111"
+    expiry_date: "2025-01-10"
+
+  scenario_3:  # Same as scenario 1
+    visa_number: "VISA_IND_2024_GHI"
+    passport_number: "P<IND22222222"
+
+  scenario_4:  # Watchlist hit - valid visa
+    visa_number: "VISA_IND_2024_JKL"
+    passport_number: "P<IND1234567"  # Watchlisted passport
+
+  scenario_5:  # Tampered document
+    visa_number: "VISA_IND_2024_MNO"
+    passport_number: "P<IND33333333"
+    tampered: true
+
+  scenario_6:  # Identity fragmentation - conflicting DOB
+    visa_number: "VISA_IND_2024_XYZ"
+    passport_number: "P<IND11111111"
+    birth_date: "1991-01-15"  # CONFLICT: passport has 1990-01-15
+    expiry_date: "2025-01-10"
+
+  scenario_7:  # Offline mode - valid visa
+    visa_number: "VISA_IND_2024_OFF"
+    passport_number: "P<IND44444444"
+    expiry_date: "2025-01-10"

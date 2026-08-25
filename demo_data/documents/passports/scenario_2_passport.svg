@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#ffffff" stroke="#cc0000" stroke-width="3"/>
+  <rect x="10" y="10" width="780" height="480" fill="#fff5f5" stroke="#ffcccc" stroke-width="1"/>
+  <text x="400" y="50" font-family="Arial" font-size="24" fill="#cc0000" text-anchor="middle" font-weight="bold">REPUBLIC OF INDIA</text>
+  <text x="400" y="80" font-family="Arial" font-size="18" fill="#cc0000" text-anchor="middle">PASSPORT <tspan fill="#ff0000">(EXPIRED)</tspan></text>
+  <line x1="50" y1="90" x2="750" y2="90" stroke="#cc0000" stroke-width="2"/>
+
+  <!-- Photo area -->
+  <rect x="50" y="110" width="180" height="220" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+  <circle cx="140" cy="170" r="50" fill="#ccc"/>
+  <ellipse cx="140" cy="280" rx="70" ry="40" fill="#ccc"/>
+  <text x="140" y="350" font-family="Arial" font-size="11" fill="#666" text-anchor="middle">PHOTO</text>
+
+  <!-- MRZ area -->
+  <rect x="50" y="350" width="700" height="88" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>
+  <text x="70" y="375" font-family="monospace" font-size="11" fill="#333">P<IND12345678<<DEMO<TRAVELER<<<<<<<<<<<<</text>
+  <text x="70" y="395" font-family="monospace" font-size="11" fill="#333">1234567890IND9001157M1812318<<<<<<<<<<<</text>
+  <text x="70" y="415" font-family="monospace" font-size="11" fill="#333">DEMO<TRAVELER<<<<<<<<<<<<<<<<<<<<</text>
+
+  <!-- Data fields -->
+  <text x="260" y="140" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Type:</tspan> P</text>
+  <text x="260" y="165" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Code:</tspan> IND</text>
+  <text x="260" y="190" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Passport No:</tspan> P<IND12345678</text>
+  <text x="260" y="215" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Surname:</tspan> DEMO</text>
+  <text x="260" y="240" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Given Names:</tspan> TRAVELER</text>
+  <text x="260" y="265" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Nationality:</tspan> INDIAN</text>
+  <text x="260" y="290" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Date of Birth:</tspan> 15 JAN 1990</text>
+  <text x="260" y="315" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Sex:</tspan> M</text>
+  <text x="260" y="340" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Place of Birth:</tspan> NEW DELHI</text>
+  <text x="550" y="140" font-family="Arial" font-size="12" fill="#cc0000"><tspan font-weight="bold">Date of Issue:</tspan> 15 JAN 2005</text>
+  <text x="550" y="165" font-family="Arial" font-size="12" fill="#cc0000"><tspan font-weight="bold">Date of Expiry:</tspan> 14 JAN 2015</text>
+  <text x="550" y="190" font-family="Arial" font-size="12" fill="#333"><tspan font-weight="bold">Authority:</tspan> GOVT OF INDIA</text>
+  <text x="400" y="460" font-family="Arial" font-size="11" fill="#cc0000" text-anchor="middle">Scenario 2: Expired Passport - Expired 14 JAN 2015 (10+ years ago)</text>
+</svg>

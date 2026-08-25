@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#f0f0f0"/>
+  <circle cx="256" cy="180" r="80" fill="#ddd"/>
+  <ellipse cx="256" cy="380" rx="100" ry="60" fill="#ddd"/>
+  <text x="256" y="480" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">Scenario 3: Face Mismatch - Live Face</text>
+  <text x="256" y="120" font-family="Arial" font-size="12" fill="#cc0000" text-anchor="middle">MISMATCH EXPECTED</text>
+  <line x1="156" y1="100" x2="356" y2="140" stroke="#cc0000" stroke-width="3"/>
+</svg>

@@ -1,0 +1,635 @@
+# BIIP-SIH2026 Demo Scenarios Configuration
+# 7 Mandated Scenarios for Smart India Hackathon 2026
+
+scenarios:
+
+  # ============================================================
+  # SCENARIO 1: CLEAN TRAVELER
+  # ============================================================
+  - id: "scenario_1"
+    name: "Clean Traveler"
+    description: "Valid passport, valid visa, face match, clean watchlist"
+    category: "BASELINE"
+    expected_recommendation: "LOW_CONCERN"
+    expected_confidence_min: 0.85
+    expected_net_score_min: 0.7
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.valid_template"
+        file: "demo_data/documents/passports/scenario_1_passport.svg"
+        mrz: "P<IND12345678<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          surname: "DEMO"
+          given_names: "TRAVELER"
+          birth_date: "1990-01-15"
+          document_number: "P<IND12345678"
+          nationality: "IND"
+          sex: "M"
+          expiry_date: "2030-01-15"
+          issuing_state: "IND"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_1"
+        file: "demo_data/documents/visas/scenario_1_visa.svg"
+        barcode: "VISA|IND|SCENARIO_1|TOURIST|SINGLE|VISA_IND_2024_ABC|P<IND12345678|DEMO|TRAVELER|1990-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024001"
+        fields:
+          visa_number: "VISA_IND_2024_ABC"
+          passport_number: "P<IND12345678"
+          surname: "DEMO"
+          given_names: "TRAVELER"
+          birth_date: "1990-01-15"
+          nationality: "IND"
+          visa_type: "TOURIST"
+          entry_type: "SINGLE"
+          issue_date: "2024-01-10"
+          expiry_date: "2025-01-10"
+          entry_date: "2024-01-15"
+          exit_date: "2024-02-15"
+          max_stay_days: 30
+
+    face:
+      live_capture: "demo_data/faces/scenario_1_live.svg"
+      match_score: 0.92
+      match_result: "MATCH"
+      liveness_result: "LIVE"
+      liveness_confidence: 0.88
+      challenge_type: "BLINK"
+      challenge_passed: true
+
+    central_status:
+      watchlist:
+        entity: "P<IND12345678"
+        status: "CLEAN"
+        freshness: "VERIFIED_FRESH"
+        source: "INTERPOL_SLTD"
+      visa_status:
+        entity: "VISA_IND_2024_ABC"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+        source: "VISA_SYSTEM"
+      passport_status:
+        entity: "P<IND12345678"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+        source: "PASSPORT_REGISTRY"
+
+    evidence_expectations:
+      positive_count_min: 8
+      negative_count: 0
+      critical_flags: []
+      freshness_all_verified_fresh: true
+
+    identity_graph:
+      person_clusters: 1
+      conflicts: 0
+      nodes: 4  # PERSON, PASSPORT, VISA, FACE
+      edges: 4  # BELONGS_TO x2, VALIDATES, MATCHES
+
+    officer_action:
+      recommended: "ALLOW"
+      requires_supervisor: false
+
+  # ============================================================
+  # SCENARIO 2: EXPIRED PASSPORT
+  # ============================================================
+  - id: "scenario_2"
+    name: "Expired Passport"
+    description: "Passport expired, valid visa"
+    category: "DOCUMENT_EXPIRY"
+    expected_recommendation: "HIGH_CONCERN"
+    expected_confidence_min: 0.9
+    expected_net_score_max: -0.5
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.expired_template"
+        file: "demo_data/documents/passports/scenario_2_passport.svg"
+        mrz: "P<IND11111111<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          surname: "DEMO"
+          given_names: "TRAVELER"
+          birth_date: "1990-01-15"
+          document_number: "P<IND11111111"
+          nationality: "IND"
+          sex: "M"
+          expiry_date: "2020-01-15"  # EXPIRED
+          issuing_state: "IND"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_2"
+        file: "demo_data/documents/visas/scenario_2_visa.svg"
+        barcode: "VISA|IND|SCENARIO_2|TOURIST|SINGLE|VISA_IND_2024_DEF|P<IND11111111|DEMO|TRAVELER|1990-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024002"
+        fields:
+          visa_number: "VISA_IND_2024_DEF"
+          passport_number: "P<IND11111111"
+          expiry_date: "2025-01-10"
+
+    face:
+      live_capture: "demo_data/faces/scenario_2_live.svg"
+      match_score: 0.89
+      match_result: "MATCH"
+      liveness_result: "LIVE"
+      liveness_confidence: 0.85
+      challenge_type: "BLINK"
+      challenge_passed: true
+
+    central_status:
+      watchlist:
+        entity: "P<IND11111111"
+        status: "CLEAN"
+        freshness: "VERIFIED_FRESH"
+      visa_status:
+        entity: "VISA_IND_2024_DEF"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+      passport_status:
+        entity: "P<IND11111111"
+        status: "EXPIRED"
+        freshness: "VERIFIED_FRESH"
+
+    evidence_expectations:
+      positive_count_min: 5
+      negative_count_min: 1
+      critical_flags: ["DOCUMENT_EXPIRED"]
+      must_have_evidence: ["DOCUMENT_EXPIRED"]
+
+    identity_graph:
+      person_clusters: 1
+      conflicts: 0
+
+    officer_action:
+      recommended: "DENY"
+      requires_supervisor: true
+
+  # ============================================================
+  # SCENARIO 3: FACE MISMATCH
+  # ============================================================
+  - id: "scenario_3"
+    name: "Face Mismatch"
+    description: "Valid documents but live face doesn't match passport photo"
+    category: "BIOMETRIC_MISMATCH"
+    expected_recommendation: "HIGH_CONCERN"
+    expected_confidence_min: 0.8
+    expected_net_score_max: -0.3
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.valid_template"
+        file: "demo_data/documents/passports/scenario_3_passport.svg"
+        mrz: "P<IND22222222<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          document_number: "P<IND22222222"
+          expiry_date: "2030-01-15"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_3"
+        file: "demo_data/documents/visas/scenario_3_visa.svg"
+        barcode: "VISA|IND|SCENARIO_3|TOURIST|SINGLE|VISA_IND_2024_GHI|P<IND22222222|DEMO|TRAVELER|1990-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024003"
+        fields:
+          visa_number: "VISA_IND_2024_GHI"
+          passport_number: "P<IND22222222"
+
+    face:
+      live_capture: "demo_data/faces/scenario_3_live.svg"
+      match_score: 0.35  # MISMATCH - different person
+      match_result: "NO_MATCH"
+      liveness_result: "LIVE"  # Real person, just not the passport holder
+      liveness_confidence: 0.92
+      challenge_type: "BLINK"
+      challenge_passed: true
+
+    central_status:
+      watchlist:
+        entity: "P<IND22222222"
+        status: "CLEAN"
+        freshness: "VERIFIED_FRESH"
+      visa_status:
+        entity: "VISA_IND_2024_GHI"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+      passport_status:
+        entity: "P<IND22222222"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+
+    evidence_expectations:
+      positive_count_min: 5
+      negative_count_min: 1
+      critical_flags: ["FACE_MISMATCH"]
+      must_have_evidence: ["FACE_MISMATCH"]
+
+    identity_graph:
+      person_clusters: 2  # Fragmentation: face != passport
+      conflicts: 1
+      conflict_details:
+        - type: "FACE_MISMATCH"
+          severity: "HIGH"
+
+    officer_action:
+      recommended: "DENY"
+      requires_supervisor: true
+
+  # ============================================================
+  # SCENARIO 4: WATCHLIST HIT
+  # ============================================================
+  - id: "scenario_4"
+    name: "Watchlist Hit"
+    description: "Passport on INTERPOL SLTD (Stolen/Lost Travel Documents)"
+    category: "WATCHLIST_ADVERSE"
+    expected_recommendation: "HIGH_CONCERN"
+    expected_confidence_min: 0.95
+    expected_net_score_max: -1.0
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.valid_template"
+        file: "demo_data/documents/passports/scenario_4_passport.svg"
+        mrz: "P<IND1234567<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          document_number: "P<IND1234567"  # WATCHLISTED NUMBER
+          expiry_date: "2030-01-15"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_4"
+        file: "demo_data/documents/visas/scenario_4_visa.svg"
+        barcode: "VISA|IND|SCENARIO_4|TOURIST|SINGLE|VISA_IND_2024_JKL|P<IND1234567|DEMO|TRAVELER|1990-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024004"
+        fields:
+          visa_number: "VISA_IND_2024_JKL"
+          passport_number: "P<IND1234567"
+
+    face:
+      live_capture: "demo_data/faces/scenario_4_live.svg"
+      match_score: 0.91
+      match_result: "MATCH"
+      liveness_result: "LIVE"
+      liveness_confidence: 0.90
+      challenge_type: "TURN"
+      challenge_passed: true
+
+    central_status:
+      watchlist:
+        entity: "P<IND1234567"
+        status: "WATCHLISTED"
+        freshness: "CONFIRMED_ADVERSE"
+        source: "INTERPOL_SLTD"
+        details:
+          reason: "Reported stolen 2023 - INTERPOL SLTD"
+          list: "INTERPOL_SLTD"
+          date_reported: "2023-06-15"
+      visa_status:
+        entity: "VISA_IND_2024_JKL"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+      passport_status:
+        entity: "P<IND1234567"
+        status: "REVOKED"
+        freshness: "CONFIRMED_ADVERSE"
+        source: "PASSPORT_REGISTRY"
+        details:
+          reason: "Reported stolen"
+
+    evidence_expectations:
+      positive_count_min: 3
+      negative_count_min: 2
+      critical_flags: ["WATCHLIST_HIT", "PASSPORT_REVOKED"]
+      must_have_evidence: ["WATCHLIST_HIT"]
+      adverse_freshness_count: 2  # CONFIRMED_ADVERSE
+
+    identity_graph:
+      person_clusters: 1
+      conflicts: 0
+
+    officer_action:
+      recommended: "DETAIN"
+      requires_supervisor: true
+
+  # ============================================================
+  # SCENARIO 5: DOCUMENT TAMPERING
+  # ============================================================
+  - id: "scenario_5"
+    name: "Document Tampering"
+    description: "Photo substitution and data alteration detected by forensics"
+    category: "DOCUMENT_FRAUD"
+    expected_recommendation: "HIGH_CONCERN"
+    expected_confidence_min: 0.9
+    expected_net_score_max: -1.0
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.tampered_template"
+        file: "demo_data/documents/passports/scenario_5_passport.svg"
+        mrz: "P<IND33333333<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          document_number: "P<IND33333333"
+          expiry_date: "2030-01-15"
+        tamper:
+          detected: true
+          anomaly_score: 0.87
+          photo_substitution_score: 0.92
+          copy_move_detected: true
+          font_anomalies: true
+          regions:
+            - region: "photo"
+              anomaly_score: 0.92
+              details: "ELA anomaly consistent with photo substitution"
+            - region: "surname"
+              anomaly_score: 0.78
+              details: "Font inconsistency detected"
+            - region: "mrz"
+              anomaly_score: 0.15
+              details: "Minor compression artifacts"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_5"
+        file: "demo_data/documents/visas/scenario_5_visa.svg"
+        barcode: "VISA|IND|SCENARIO_5|TOURIST|SINGLE|VISA_IND_2024_MNO|P<IND33333333|DEMO|TRAVELER|1990-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024005"
+        fields:
+          visa_number: "VISA_IND_2024_MNO"
+          passport_number: "P<IND33333333"
+
+    face:
+      live_capture: "demo_data/faces/scenario_5_live.svg"
+      match_score: 0.28  # Mismatch due to substituted photo
+      match_result: "NO_MATCH"
+      liveness_result: "LIVE"
+      liveness_confidence: 0.88
+      challenge_type: "BLINK"
+      challenge_passed: true
+
+    central_status:
+      watchlist:
+        entity: "P<IND33333333"
+        status: "CLEAN"
+        freshness: "VERIFIED_FRESH"
+      visa_status:
+        entity: "VISA_IND_2024_MNO"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+      passport_status:
+        entity: "P<IND33333333"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+
+    evidence_expectations:
+      positive_count_min: 3
+      negative_count_min: 3
+      critical_flags: ["DOCUMENT_TAMPER_PHOTO", "FACE_MISMATCH"]
+      must_have_evidence: ["DOCUMENT_TAMPER_PHOTO", "DOCUMENT_TAMPER_FONT", "DOCUMENT_TAMPER_COPY_MOVE", "FACE_MISMATCH"]
+
+    identity_graph:
+      person_clusters: 2  # Face doesn't match tampered passport
+      conflicts: 2
+      conflict_details:
+        - type: "DOCUMENT_TAMPER"
+          severity: "CRITICAL"
+        - type: "FACE_MISMATCH"
+          severity: "HIGH"
+
+    officer_action:
+      recommended: "DETAIN"
+      requires_supervisor: true
+
+  # ============================================================
+  # SCENARIO 6: IDENTITY FRAGMENTATION
+  # ============================================================
+  - id: "scenario_6"
+    name: "Identity Fragmentation"
+    description: "Conflicting data between passport and visa (different DOB)"
+    category: "IDENTITY_CONFLICT"
+    expected_recommendation: "SECONDARY_INSPECTION"
+    expected_confidence_min: 0.7
+    expected_net_score_min: -0.5
+    expected_net_score_max: 0.3
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.valid_template"
+        file: "demo_data/documents/passports/scenario_6_passport.svg"
+        mrz: "P<IND11111111<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          document_number: "P<IND11111111"
+          birth_date: "1990-01-15"
+          expiry_date: "2030-01-15"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_6"
+        file: "demo_data/documents/visas/scenario_6_visa.svg"
+        barcode: "VISA|IND|SCENARIO_6|TOURIST|SINGLE|VISA_IND_2024_XYZ|P<IND11111111|DEMO|TRAVELER|1991-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024006"
+        fields:
+          visa_number: "VISA_IND_2024_XYZ"
+          passport_number: "P<IND11111111"
+          birth_date: "1991-01-15"  # CONFLICT: Different DOB!
+
+    face:
+      live_capture: "demo_data/faces/scenario_6_live.svg"
+      match_score: 0.90
+      match_result: "MATCH"
+      liveness_result: "LIVE"
+      liveness_confidence: 0.87
+      challenge_type: "SMILE"
+      challenge_passed: true
+
+    central_status:
+      watchlist:
+        entity: "P<IND11111111"
+        status: "CLEAN"
+        freshness: "VERIFIED_FRESH"
+      visa_status:
+        entity: "VISA_IND_2024_XYZ"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+      passport_status:
+        entity: "P<IND11111111"
+        status: "VALID"
+        freshness: "VERIFIED_FRESH"
+
+    evidence_expectations:
+      positive_count_min: 5
+      negative_count_min: 2
+      critical_flags: ["CROSS_FIELD_CONFLICT_DOB", "IDENTITY_FRAGMENTATION"]
+      must_have_evidence: ["CROSS_FIELD_CONFLICT_DOB", "IDENTITY_FRAGMENTATION"]
+
+    identity_graph:
+      person_clusters: 2  # Two person entities from conflicting docs
+      conflicts: 1
+      conflict_details:
+        - type: "CROSS_FIELD_CONFLICT"
+          field: "birth_date"
+          values: ["1990-01-15", "1991-01-15"]
+          severity: "HIGH"
+          edge_type: "CONFLICTS_WITH"
+
+    officer_action:
+      recommended: "SECONDARY_INSPECTION"
+      requires_supervisor: false
+
+  # ============================================================
+  # SCENARIO 7: OFFLINE MODE
+  # ============================================================
+  - id: "scenario_7"
+    name: "Offline Mode"
+    description: "Central databases unreachable - all local processing works"
+    category: "OFFLINE_RESILIENCE"
+    expected_recommendation: "INSUFFICIENT_EVIDENCE"
+    expected_confidence_max: 0.5
+    expected_net_score_min: 0.3
+
+    documents:
+      passport:
+        template: "passport_td3.yaml"
+        data: "demo_generation.valid_template"
+        file: "demo_data/documents/passports/scenario_7_passport.svg"
+        mrz: "P<IND44444444<<DEMO<TRAVELER<<<<<<<<<<<<"
+        fields:
+          document_number: "P<IND44444444"
+          expiry_date: "2030-01-15"
+
+      visa:
+        template: "visa_pdf417.yaml"
+        data: "demo_generation.scenario_7"
+        file: "demo_data/documents/visas/scenario_7_visa.svg"
+        barcode: "VISA|IND|SCENARIO_7|TOURIST|SINGLE|VISA_IND_2024_OFF|P<IND44444444|DEMO|TRAVELER|1990-01-15|IND|2024-01-10|2025-01-10|2024-01-15|2024-02-15|30|DEL|TOURISM|REF2024007"
+        fields:
+          visa_number: "VISA_IND_2024_OFF"
+          passport_number: "P<IND44444444"
+
+    face:
+      live_capture: "demo_data/faces/scenario_7_live.svg"
+      match_score: 0.93
+      match_result: "MATCH"
+      liveness_result: "LIVE"
+      liveness_confidence: 0.90
+      challenge_type: "BLINK"
+      challenge_passed: true
+
+    central_status:
+      # ALL UNAVAILABLE - central systems unreachable
+      watchlist:
+        entity: "P<IND44444444"
+        status: "UNKNOWN"
+        freshness: "UNAVAILABLE"
+        source: "INTERPOL_SLTD"
+        details:
+          error: "Connection timeout - central database unreachable"
+      visa_status:
+        entity: "VISA_IND_2024_OFF"
+        status: "UNKNOWN"
+        freshness: "UNAVAILABLE"
+        source: "VISA_SYSTEM"
+        details:
+          error: "Connection timeout - central database unreachable"
+      passport_status:
+        entity: "P<IND44444444"
+        status: "UNKNOWN"
+        freshness: "UNAVAILABLE"
+        source: "PASSPORT_REGISTRY"
+        details:
+          error: "Connection timeout - central database unreachable"
+
+    evidence_expectations:
+      positive_count_min: 4
+      negative_count: 0
+      critical_flags: []
+      unavailable_count: 3  # watchlist, visa, passport central checks
+      must_have_freshness: ["UNAVAILABLE"]
+      # Key assertion: UNAVAILABLE ≠ CLEAR
+
+    sync_queue:
+      - operation: "STATUS_CHECK"
+        entity: "P<IND44444444"
+        status_type: "WATCHLIST"
+        priority: "CRITICAL"
+      - operation: "STATUS_CHECK"
+        entity: "VISA_IND_2024_OFF"
+        status_type: "VISA"
+        priority: "HIGH"
+      - operation: "STATUS_CHECK"
+        entity: "P<IND44444444"
+        status_type: "PASSPORT"
+        priority: "HIGH"
+
+    identity_graph:
+      person_clusters: 1
+      conflicts: 0
+
+    officer_action:
+      recommended: "SECONDARY_INSPECTION"
+      requires_supervisor: false
+      note: "Central verification pending - manual verification required"
+
+# ============================================================
+# SCENARIO EXECUTION SETTINGS
+# ============================================================
+execution:
+  case_number_prefix: "DEMO"
+  auto_load_test_data: true
+  run_all_on_startup: false
+
+  # Timing for demo presentation
+  demo_delays:
+    document_processing: 2  # seconds
+    face_verification: 3
+    evidence_generation: 1
+    fusion: 1
+    graph_building: 1
+    total_per_scenario: 8
+
+# ============================================================
+# VERIFICATION CRITERIA FOR JUDGES
+# ============================================================
+judge_verification:
+  scenario_1:
+    - "All evidence VERIFIED_FRESH"
+    - "Net score > 0.7"
+    - "Recommendation: LOW_CONCERN"
+    - "Zero critical flags"
+
+  scenario_2:
+    - "CRITICAL severity DOCUMENT_EXPIRED evidence"
+    - "Net score < -0.5"
+    - "Recommendation: HIGH_CONCERN"
+    - "Critical flag: DOCUMENT_EXPIRED"
+
+  scenario_3:
+    - "HIGH severity FACE_MISMATCH evidence (score ~0.35)"
+    - "Liveness = LIVE (proves real person, wrong person)"
+    - "Recommendation: HIGH_CONCERN"
+
+  scenario_4:
+    - "CONFIRMED_ADVERSE freshness on WATCHLIST_HIT"
+    - "CONFIRMED_ADVERSE on PASSPORT_REVOKED"
+    - "Negative score boosted by 2.0x ADVERSE modifier"
+    - "Recommendation: HIGH_CONCERN"
+
+  scenario_5:
+    - "CRITICAL DOCUMENT_TAMPER_PHOTO (ELA > 0.8)"
+    - "CRITICAL DOCUMENT_TAMPER_FONT"
+    - "HIGH DOCUMENT_TAMPER_COPY_MOVE"
+    - "Face mismatch CORROBORATES tampering"
+    - "Recommendation: HIGH_CONCERN"
+
+  scenario_6:
+    - "CONFLICTS_WITH edge in identity graph"
+    - "Field: birth_date, values differ (1990 vs 1991)"
+    - "Two PERSON clusters"
+    - "Recommendation: SECONDARY_INSPECTION (not HIGH_CONCERN)"
+
+  scenario_7:
+    - "Three UNAVAILABLE freshness entries"
+    - "NO WATCHLIST_CLEAN evidence (UNAVAILABLE ≠ CLEAR)"
+    - "Confidence < 0.5 due to UNAVAILABLE penalty"
+    - "Recommendation: INSUFFICIENT_EVIDENCE"
+    - "Sync queue populated with CRITICAL/HIGH priority"

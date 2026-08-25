@@ -1,0 +1,100 @@
+# BIIP-SIH2026 Docker Compose
+# Full stack: Frontend + Backend + Simulated Central Service
+
+version: '3.8'
+
+services:
+  # --------------------------------------------
+  # Backend API (FastAPI)
+  # --------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: biip-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./biip.db
+      - CORS_ORIGINS=["http://localhost:5173","http://frontend:5173"]
+      - OFFLINE_MODE=false
+      - CENTRAL_SERVICE_URL=http://central-service:8001
+      - LOG_LEVEL=INFO
+      - DEMO_MODE=true
+    volumes:
+      - ./backend:/app
+      - biip-data:/app/data
+    networks:
+      - biip-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # --------------------------------------------
+  # Frontend (Vite + React)
+  # --------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: biip-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api
+      - VITE_WS_URL=ws://localhost:8000/ws
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - biip-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # --------------------------------------------
+  # Simulated Central Verification Service
+  # --------------------------------------------
+  central-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.central
+    container_name: biip-central-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=sqlite:///./central.db
+      - LOG_LEVEL=INFO
+      - SIMULATED=true
+    volumes:
+      - ./backend:/app
+      - central-data:/app/data
+    networks:
+      - biip-network
+    restart: unless-stopped
+
+  # --------------------------------------------
+  # Optional: Redis for caching/sync queue (future)
+  # --------------------------------------------
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: biip-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - biip-network
+  #   restart: unless-stopped
+
+networks:
+  biip-network:
+    driver: bridge
+
+volumes:
+  biip-data:
+  central-data:
+  # redis-data:

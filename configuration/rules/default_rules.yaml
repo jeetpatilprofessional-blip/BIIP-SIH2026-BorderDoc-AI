@@ -1,0 +1,497 @@
+# BIIP-SIH2026 Default Rule Set
+# Version: 1.0
+# Description: Core business rules for border identity verification
+
+rule_set:
+  name: "SIH2026_Default"
+  version: 1
+  description: "Default rules for Smart India Hackathon 2026 demo"
+  is_active: true
+
+rules:
+  # ============================================================
+  # EXPIRY RULES
+  # ============================================================
+  - id: "EXPIRY_PASSPORT"
+    type: "EXPIRY"
+    name: "Passport Expiry Check"
+    description: "Passport must not be expired at time of entry"
+    severity: "CRITICAL"
+    enabled: true
+    applies_to: ["PASSPORT"]
+    condition:
+      field: "expiry_date"
+      operator: "lt"
+      value: "{{ current_date }}"
+    message: "Passport expired on {{ expiry_date }}"
+    evidence_type: "DOCUMENT_EXPIRED"
+    evidence_severity: "CRITICAL"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "EXPIRY_VISA"
+    type: "EXPIRY"
+    name: "Visa Expiry Check"
+    description: "Visa must not be expired at time of entry"
+    severity: "CRITICAL"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      field: "expiry_date"
+      operator: "lt"
+      value: "{{ current_date }}"
+    message: "Visa expired on {{ expiry_date }}"
+    evidence_type: "VISA_EXPIRED"
+    evidence_severity: "CRITICAL"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "EXPIRY_VISA_ENTRY_BEFORE_ISSUE"
+    type: "EXPIRY"
+    name: "Visa Entry Before Issue Date"
+    description: "Entry date cannot be before visa issue date"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      field: "entry_date"
+      operator: "lt"
+      value: "{{ issue_date }}"
+    message: "Entry date {{ entry_date }} before visa issue date {{ issue_date }}"
+    evidence_type: "VISA_INVALID_DATES"
+    evidence_severity: "HIGH"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "EXPIRY_VISA_EXIT_AFTER_EXPIRY"
+    type: "EXPIRY"
+    name: "Visa Exit After Expiry"
+    description: "Exit date cannot be after visa expiry date"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      field: "exit_date"
+      operator: "gt"
+      value: "{{ expiry_date }}"
+    message: "Exit date {{ exit_date }} after visa expiry {{ expiry_date }}"
+    evidence_type: "VISA_INVALID_DATES"
+    evidence_severity: "HIGH"
+    evidence_source: "RULE_ENGINE"
+
+  # ============================================================
+  # FORMAT RULES
+  # ============================================================
+  - id: "FORMAT_MRZ_CHECKSUM"
+    type: "FORMAT"
+    name: "MRZ Checksum Validation"
+    description: "All MRZ fields must have valid check digits"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      field: "mrz_valid"
+      operator: "eq"
+      value: false
+    message: "MRZ checksum validation failed"
+    evidence_type: "MRZ_INVALID"
+    evidence_severity: "HIGH"
+    evidence_source: "MRZ"
+
+  - id: "FORMAT_MRZ_STRUCTURE"
+    type: "FORMAT"
+    name: "MRZ Structure Validation"
+    description: "MRZ must conform to TD3 format (2 lines x 44 chars)"
+    severity: "MEDIUM"
+    enabled: true
+    applies_to: ["PASSPORT"]
+    condition:
+      field: "mrz_raw"
+      operator: "regex_not_match"
+      value: "^P<[A-Z]{3}[A-Z<]{39}\\n[A-Z0-9<]{44}$"
+    message: "MRZ format does not match TD3 specification"
+    evidence_type: "MRZ_FORMAT_INVALID"
+    evidence_severity: "MEDIUM"
+    evidence_source: "MRZ"
+
+  - id: "FORMAT_BARCODE_VALID"
+    type: "FORMAT"
+    name: "Barcode Format Validation"
+    description: "Visa/National ID barcode must parse correctly"
+    severity: "MEDIUM"
+    enabled: true
+    applies_to: ["VISA", "NATIONAL_ID"]
+    condition:
+      field: "barcode_valid"
+      operator: "eq"
+      value: false
+    message: "Barcode parsing failed or format invalid"
+    evidence_type: "BARCODE_INVALID"
+    evidence_severity: "MEDIUM"
+    evidence_source: "BARCODE"
+
+  - id: "FORMAT_DOCUMENT_NUMBER"
+    type: "FORMAT"
+    name: "Document Number Format"
+    description: "Document numbers must match expected pattern for country"
+    severity: "LOW"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      field: "document_number"
+      operator: "regex_not_match"
+      value: "^[A-Z0-9<]{6,20}$"
+    message: "Document number format suspicious"
+    evidence_type: "DOC_NUMBER_FORMAT"
+    evidence_severity: "LOW"
+    evidence_source: "RULE_ENGINE"
+
+  # ============================================================
+  # CROSS-FIELD CONSISTENCY RULES
+  # ============================================================
+  - id: "CROSS_FIELD_DOB_CONSISTENCY"
+    type: "CROSS_FIELD"
+    name: "Date of Birth Consistency"
+    description: "DOB must match across all documents for same person"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      type: "cross_document_field_match"
+      field: "birth_date"
+      documents: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    message: "Date of birth mismatch: {{ values }}"
+    evidence_type: "CROSS_FIELD_CONFLICT_DOB"
+    evidence_severity: "HIGH"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "CROSS_FIELD_NAME_CONSISTENCY"
+    type: "CROSS_FIELD"
+    name: "Name Consistency"
+    description: "Name fields must be consistent across documents"
+    severity: "MEDIUM"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      type: "cross_document_field_match"
+      field: "surname"
+      documents: ["PASSPORT", "VISA", "NATIONAL_ID"]
+      fuzzy: true
+      threshold: 0.85
+    message: "Surname mismatch across documents: {{ values }}"
+    evidence_type: "CROSS_FIELD_CONFLICT_NAME"
+    evidence_severity: "MEDIUM"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "CROSS_FIELD_NATIONALITY_CONSISTENCY"
+    type: "CROSS_FIELD"
+    name: "Nationality Consistency"
+    description: "Nationality must match across documents"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      type: "cross_document_field_match"
+      field: "nationality"
+      documents: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    message: "Nationality mismatch: {{ values }}"
+    evidence_type: "CROSS_FIELD_CONFLICT_NATIONALITY"
+    evidence_severity: "HIGH"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "CROSS_FIELD_PASSPORT_NUMBER_REFERENCE"
+    type: "CROSS_FIELD"
+    name: "Visa References Valid Passport"
+    description: "Visa passport_number field must match actual passport"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      type: "field_references_document"
+      field: "passport_number"
+      referenced_doc_type: "PASSPORT"
+      referenced_field: "document_number"
+    message: "Visa references passport {{ passport_number }} but no matching passport found"
+    evidence_type: "VISA_PASSPORT_MISMATCH"
+    evidence_severity: "HIGH"
+    evidence_source: "RULE_ENGINE"
+
+  # ============================================================
+  # WATCHLIST RULES
+  # ============================================================
+  - id: "WATCHLIST_INTERPOL_SLTD"
+    type: "WATCHLIST"
+    name: "INTERPOL SLTD Check"
+    description: "Document number checked against INTERPOL Stolen/Lost Travel Documents"
+    severity: "CRITICAL"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      type: "watchlist_check"
+      list: "INTERPOL_SLTD"
+      field: "document_number"
+    message: "Document {{ document_number }} found on INTERPOL SLTD: {{ reason }}"
+    evidence_type: "WATCHLIST_HIT"
+    evidence_severity: "CRITICAL"
+    evidence_source: "WATCHLIST"
+    # This rule generates CONFIRMED_ADVERSE freshness when hit
+
+  - id: "WATCHLIST_NATIONAL_WATCHLIST"
+    type: "WATCHLIST"
+    name: "National Watchlist Check"
+    description: "Person details checked against national watchlist"
+    severity: "CRITICAL"
+    enabled: true
+    applies_to: ["PASSPORT", "NATIONAL_ID"]
+    condition:
+      type: "watchlist_check"
+      list: "NATIONAL_WATCHLIST"
+      fields: ["surname", "given_names", "birth_date", "nationality"]
+    message: "Traveler matches national watchlist entry: {{ reason }}"
+    evidence_type: "WATCHLIST_HIT"
+    evidence_severity: "CRITICAL"
+    evidence_source: "WATCHLIST"
+
+  - id: "WATCHLIST_VISA_DENIED_LIST"
+    type: "WATCHLIST"
+    name: "Visa Denied List"
+    description: "Check if visa applicant was previously denied"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      type: "watchlist_check"
+      list: "VISA_DENIED"
+      field: "visa_number"
+    message: "Visa {{ visa_number }} associated with previous denial"
+    evidence_type: "VISA_PREVIOUS_DENIAL"
+    evidence_severity: "HIGH"
+    evidence_source: "WATCHLIST"
+
+  # ============================================================
+  # VISA VALIDITY RULES
+  # ============================================================
+  - id: "VISA_VALIDITY_TYPE_MATCH"
+    type: "VISA_VALIDITY"
+    name: "Visa Type Matches Purpose"
+    description: "Visa type must be appropriate for declared entry purpose"
+    severity: "MEDIUM"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      field: "visa_type"
+      operator: "in"
+      value: ["TOURIST", "BUSINESS", "TRANSIT", "STUDENT", "WORK", "MEDICAL"]
+    message: "Visa type {{ visa_type }} may not match entry purpose"
+    evidence_type: "VISA_TYPE_MISMATCH"
+    evidence_severity: "MEDIUM"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "VISA_VALIDITY_SINGLE_ENTRY_USED"
+    type: "VISA_VALIDITY"
+    name: "Single Entry Visa Not Reused"
+    description: "Single entry visa cannot be used for re-entry"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      type: "visa_entry_count"
+      field: "visa_type"
+      value: "SINGLE"
+      max_entries: 1
+    message: "Single entry visa {{ visa_number }} already used"
+    evidence_type: "VISA_REUSE_DETECTED"
+    evidence_severity: "HIGH"
+    evidence_source: "RULE_ENGINE"
+
+  - id: "VISA_VALIDITY_DURATION"
+    type: "VISA_VALIDITY"
+    name: "Visa Duration Compliance"
+    description: "Stay duration must not exceed visa validity period"
+    severity: "MEDIUM"
+    enabled: true
+    applies_to: ["VISA"]
+    condition:
+      field: "intended_stay_days"
+      operator: "gt"
+      value: "{{ max_stay_days }}"
+    message: "Intended stay {{ intended_stay_days }} days exceeds visa max {{ max_stay_days }}"
+    evidence_type: "VISA_OVERSTAY_RISK"
+    evidence_severity: "MEDIUM"
+    evidence_source: "RULE_ENGINE"
+
+  # ============================================================
+  # DOCUMENT AUTHENTICITY RULES
+  # ============================================================
+  - id: "AUTHENTICITY_TAMPER_DETECTED"
+    type: "DOCUMENT_AUTHENTICITY"
+    name: "Tamper Detection"
+    description: "Document shows signs of physical/digital tampering"
+    severity: "CRITICAL"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      field: "tamper_detected"
+      operator: "eq"
+      value: true
+    message: "Document tampering detected: {{ tamper_details }}"
+    evidence_type: "DOCUMENT_TAMPER"
+    evidence_severity: "CRITICAL"
+    evidence_source: "TAMPER_DETECTION"
+
+  - id: "AUTHENTICITY_PHOTO_SUBSTITUTION"
+    type: "DOCUMENT_AUTHENTICITY"
+    name: "Photo Substitution"
+    description: "Portrait photo shows signs of substitution"
+    severity: "CRITICAL"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      field: "photo_substitution_score"
+      operator: "gt"
+      value: 0.7
+    message: "Photo substitution detected (score: {{ photo_substitution_score }})"
+    evidence_type: "DOCUMENT_TAMPER_PHOTO"
+    evidence_severity: "CRITICAL"
+    evidence_source: "TAMPER_DETECTION"
+
+  # ============================================================
+  # BIOMETRIC RULES
+  # ============================================================
+  - id: "BIOMETRIC_FACE_MATCH_THRESHOLD"
+    type: "BIOMETRIC"
+    name: "Face Match Threshold"
+    description: "Live face must match document portrait above threshold"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      field: "match_score"
+      operator: "lt"
+      value: 0.6
+    message: "Face match score {{ match_score }} below threshold 0.6"
+    evidence_type: "FACE_MISMATCH"
+    evidence_severity: "HIGH"
+    evidence_source: "FACE_VERIFICATION"
+
+  - id: "BIOMETRIC_LIVENESS_FAILED"
+    type: "BIOMETRIC"
+    name: "Liveness Check Failed"
+    description: "Live capture failed liveness detection"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["PASSPORT", "VISA", "NATIONAL_ID"]
+    condition:
+      field: "liveness_result"
+      operator: "neq"
+      value: "LIVE"
+    message: "Liveness check result: {{ liveness_result }} (confidence: {{ liveness_confidence }})"
+    evidence_type: "LIVENESS_FAILED"
+    evidence_severity: "HIGH"
+    evidence_source: "LIVENESS"
+
+  # ============================================================
+  # IDENTITY GRAPH RULES
+  # ============================================================
+  - id: "GRAPH_IDENTITY_FRAGMENTATION"
+    type: "IDENTITY_GRAPH"
+    name: "Identity Fragmentation Detection"
+    description: "Multiple person clusters for same document set"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["CASE"]
+    condition:
+      type: "multiple_person_clusters"
+      min_clusters: 2
+    message: "Identity fragmentation detected: {{ cluster_count }} person clusters"
+    evidence_type: "IDENTITY_FRAGMENTATION"
+    evidence_severity: "HIGH"
+    evidence_source: "IDENTITY_GRAPH"
+
+  - id: "GRAPH_CONFLICT_DETECTION"
+    type: "IDENTITY_GRAPH"
+    name: "Graph Conflict Detection"
+    description: "Conflicts in identity graph (CONFLICTS_WITH edges)"
+    severity: "HIGH"
+    enabled: true
+    applies_to: ["CASE"]
+    condition:
+      type: "has_conflict_edges"
+    message: "Identity graph contains {{ conflict_count }} conflicts"
+    evidence_type: "IDENTITY_CONFLICT"
+    evidence_severity: "HIGH"
+    evidence_source: "IDENTITY_GRAPH"
+
+# ============================================================
+# FRESHNESS TTL CONFIGURATION
+# ============================================================
+freshness_ttl:
+  WATCHLIST:
+    fresh_hours: 4
+    stale_hours: 24
+  VISA:
+    fresh_hours: 24
+    stale_hours: 72
+  PASSPORT:
+    fresh_hours: 24
+    stale_hours: 72
+  BIOMETRIC:
+    fresh_hours: 12
+    stale_hours: 48
+  TAMPER:
+    fresh_hours: 1
+    stale_hours: 6
+  DOCUMENT_VALIDATION:
+    fresh_hours: 1
+    stale_hours: 24
+
+# ============================================================
+# FUSION WEIGHT CONFIGURATION
+# ============================================================
+fusion_weights:
+  severity:
+    INFO: 0.1
+    LOW: 0.25
+    MEDIUM: 0.5
+    HIGH: 0.75
+    CRITICAL: 1.0
+
+  source_reliability:
+    MRZ: 1.0
+    BARCODE: 0.9
+    NFC: 0.95
+    FACE_VERIFICATION: 0.9
+    LIVENESS: 0.85
+    TAMPER_DETECTION: 0.8
+    WATCHLIST: 1.0
+    VISA_SYSTEM: 0.95
+    PASSPORT_REGISTRY: 0.95
+    RULE_ENGINE: 0.9
+    IDENTITY_GRAPH: 0.85
+    OCR: 0.7
+
+  freshness_modifiers:
+    VERIFIED_FRESH: 1.0
+    VERIFIED_STALE: 0.5
+    UNAVAILABLE: 0.2
+    CONFIRMED_ADVERSE: 2.0  # Applied to negative evidence only
+
+# ============================================================
+# RECOMMENDATION THRESHOLDS
+# ============================================================
+recommendation_thresholds:
+  LOW_CONCERN:
+    min_net_score: 0.7
+    min_confidence: 0.8
+    no_critical_flags: true
+
+  HIGH_CONCERN:
+    max_net_score: -0.5
+    min_confidence: 0.7
+    # OR any critical flag
+
+  INSUFFICIENT_EVIDENCE:
+    # Key evidence UNAVAILABLE
+    key_freshness_unavailable: true
+    min_confidence: 0.5
+
+  SECONDARY_INSPECTION:
+    # Default fallback
+    default: true

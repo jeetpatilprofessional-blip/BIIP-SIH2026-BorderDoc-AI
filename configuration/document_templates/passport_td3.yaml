@@ -1,0 +1,216 @@
+# BIIP-SIH2026 Document Templates
+# Passport TD3 (ICAO 9303) Template Configuration
+
+document_type: "PASSPORT"
+format: "TD3"
+standard: "ICAO 9303 Part 4"
+version: "1.0"
+
+# MRZ Structure (2 lines x 44 characters)
+mrz_structure:
+  line1:
+    - name: "document_type"
+      position: 0
+      length: 1
+      value: "P"
+      description: "Document code (P = Passport)"
+
+    - name: "issuing_state"
+      position: 1
+      length: 3
+      description: "ISO 3166-1 alpha-3 country code"
+      example: "IND"
+
+    - name: "surname"
+      position: 4
+      length: 39
+      description: "Surname, truncated/padded with <"
+      example: "DEMO<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+
+    - name: "given_names"
+      position: 43
+      length: 39
+      description: "Given names, separated by <, padded with <"
+      note: "Continues on line 2 if needed"
+
+  line2:
+    - name: "document_number"
+      position: 0
+      length: 9
+      description: "Passport number"
+      example: "12345678"
+
+    - name: "document_number_check"
+      position: 9
+      length: 1
+      description: "Check digit for document number"
+
+    - name: "nationality"
+      position: 10
+      length: 3
+      description: "ISO 3166-1 alpha-3 nationality code"
+      example: "IND"
+
+    - name: "birth_date"
+      position: 13
+      length: 6
+      format: "YYMMDD"
+      description: "Date of birth"
+      example: "900115"
+
+    - name: "birth_date_check"
+      position: 19
+      length: 1
+      description: "Check digit for birth date"
+
+    - name: "sex"
+      position: 20
+      length: 1
+      values: ["M", "F", "<"]
+      description: "Sex"
+
+    - name: "expiry_date"
+      position: 21
+      length: 6
+      format: "YYMMDD"
+      description: "Expiry date"
+      example: "300115"
+
+    - name: "expiry_date_check"
+      position: 27
+      length: 1
+      description: "Check digit for expiry date"
+
+    - name: "personal_number"
+      position: 28
+      length: 14
+      description: "Personal number (optional)"
+      example: "<<<<<<<<<<<<<<"
+
+    - name: "personal_number_check"
+      position: 42
+      length: 1
+      description: "Check digit for personal number"
+
+    - name: "composite_check"
+      position: 43
+      length: 1
+      description: "Composite check digit for line 2"
+
+# Check Digit Algorithm (ICAO 9303)
+check_digit_algorithm:
+  weights: [7, 3, 1]
+  description: "Multiply each character by weight (cycling 7,3,1), sum, mod 10"
+  character_values:
+    "0-9": 0-9
+    "A-Z": 10-35
+    "<": 0
+
+# Field Extraction Mapping (from OCR/MRZ to internal fields)
+field_mapping:
+  mrz:
+    surname: "surname"
+    given_names: "given_names"
+    document_number: "document_number"
+    nationality: "nationality"
+    birth_date: "birth_date"
+    sex: "sex"
+    expiry_date: "expiry_date"
+    personal_number: "personal_number"
+
+  ocr_zones:
+    # Visual zones for OCR extraction (coordinates relative to normalized image)
+    - name: "surname"
+      zone: [0.1, 0.15, 0.5, 0.25]
+      languages: ["eng"]
+    - name: "given_names"
+      zone: [0.1, 0.25, 0.5, 0.35]
+      languages: ["eng"]
+    - name: "document_number"
+      zone: [0.6, 0.05, 0.95, 0.15]
+      languages: ["eng"]
+    - name: "nationality"
+      zone: [0.1, 0.35, 0.3, 0.45]
+      languages: ["eng"]
+    - name: "birth_date"
+      zone: [0.1, 0.45, 0.3, 0.55]
+      languages: ["eng"]
+    - name: "sex"
+      zone: [0.4, 0.45, 0.5, 0.55]
+      languages: ["eng"]
+    - name: "expiry_date"
+      zone: [0.1, 0.55, 0.3, 0.65]
+      languages: ["eng"]
+    - name: "personal_number"
+      zone: [0.1, 0.65, 0.5, 0.75]
+      languages: ["eng"]
+
+# Validation Rules
+validation:
+  required_fields:
+    - "document_type"
+    - "issuing_state"
+    - "surname"
+    - "document_number"
+    - "nationality"
+    - "birth_date"
+    - "sex"
+    - "expiry_date"
+
+  field_formats:
+    document_number: "^[A-Z0-9]{6,9}$"
+    birth_date: "^\\d{6}$"  # YYMMDD
+    expiry_date: "^\\d{6}$"  # YYMMDD
+    sex: "^[MF<]$"
+    issuing_state: "^[A-Z]{3}$"
+    nationality: "^[A-Z]{3}$"
+
+  cross_validation:
+    - "mrz_checksums_valid"
+    - "birth_date_before_expiry"
+    - "expiry_date_not_past"  # For entry validation
+    - "age_reasonable"  # 0-120 years
+
+# Visual Features for Tamper Detection
+visual_features:
+  photo_zone: [0.65, 0.15, 0.95, 0.65]  # Right side photo area
+  mrz_zone: [0.0, 0.82, 1.0, 1.0]  # Bottom two lines
+  security_features:
+    - "hologram"
+    - "watermark"
+    - "uv_pattern"
+    - "microprint"
+    - "optically_variable_ink"
+
+# Country-Specific Overrides
+country_overrides:
+  IND:
+    document_number_pattern: "^[A-Z][0-9]{7}$"
+    example_number: "P1234567"
+  USA:
+    document_number_pattern: "^[0-9]{9}$"
+    example_number: "123456789"
+  GBR:
+    document_number_pattern: "^[0-9]{9}$"
+    example_number: "123456789"
+
+# Demo Data Generation
+demo_generation:
+  valid_template:
+    issuing_state: "IND"
+    surname: "DEMO"
+    given_names: "TRAVELER"
+    document_number: "P1234567"
+    nationality: "IND"
+    birth_date: "900115"  # 1990-01-15
+    sex: "M"
+    expiry_date: "300115"  # 2030-01-15
+    personal_number: ""
+
+  expired_template:
+    expiry_date: "200115"  # 2020-01-15 (expired)
+
+  tampered_template:
+    photo_substitution: true
+    font_anomalies: true
+    ela_anomaly_score: 0.85

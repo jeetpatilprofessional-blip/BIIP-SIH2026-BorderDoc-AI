@@ -1,0 +1,19 @@
+# BIIP-SIH2026 Central Service Dockerfile (Simulated)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create data directory
+RUN mkdir -p /app/data
+
+EXPOSE 8001
+
+# Run central service on port 8001
+CMD ["uvicorn", "app.central_main:app", "--host", "0.0.0.0", "--port", "8001"]

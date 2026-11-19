@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from sqlmodel import Session, select
 from collections import defaultdict
+import ast
 
 from app.services.evidence.models import (
     FusionResult,
@@ -219,7 +220,7 @@ class EvidenceFusionEngine:
             confidence=atom.confidence,
             description=atom.description,
             explanation=atom.explanation,
-            entities=eval(atom.entities) if atom.entities else [],
+            entities=ast.literal_eval(atom.entities) if atom.entities else [],
             freshness=atom.freshness,
             weight=weight,
             contribution=contribution,

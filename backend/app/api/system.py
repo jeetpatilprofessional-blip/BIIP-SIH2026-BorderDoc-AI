@@ -8,7 +8,7 @@ from app.core.database import get_session
 from app.core.config import get_settings
 from app.models.status_cache import StatusCache, FreshnessState
 from app.models.sync_queue import SyncQueue, SyncStatus
-from app.models.case import Case
+from app.models.case import Case, CaseStatus
 from app.schemas.system import SystemStatus, ComponentHealth, DatabaseFreshness, ComponentStatus, SystemMode
 
 router = APIRouter()

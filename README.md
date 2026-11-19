@@ -222,3 +222,7 @@ SIH 2026 Project — Educational/Research Use
 - All "central verification" is simulated and clearly labeled
 - Liveness detection is PROTOTYPE-LEVEL only
 - Production deployment requires certified hardware, vetted models, and government authorization
+
+## Security and decision-use limitations
+
+This repository is a hackathon/portfolio prototype. Configuration includes development defaults and demo-mode behavior; replace secrets, restrict CORS, and add/verify server-side authorization before deployment. Component status and several central-service behaviors are simulated, and the screening recommendation is not a validated risk model or authority. Never use this project to make real border, immigration, detention, or identity decisions. No independent security audit or complete end-to-end runtime test has been performed.
